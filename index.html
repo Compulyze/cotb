@@ -1,0 +1,1549 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe on the Beach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: top 0.3s;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo img {
+            width: 180px;
+            height: auto;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        nav ul li {
+            position: relative;
+        }
+
+        nav ul li a {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        nav ul li a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        nav ul li.active a {
+            background-color: #3498db;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        nav ul li.active a::before {
+            content: "🏖️";
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .hamburger {
+            display: none;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+        }
+
+        #menu-toggle {
+            display: none;
+        }
+
+        .hero {
+            background: url('https://via.placeholder.com/1200x400?text=Hero+Image+-+Beachfront') no-repeat center center/cover;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .hero .cta-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 20px;
+            border-radius: 5px;
+            transition: transform 0.3s ease, background-color 0.3s;
+        }
+
+        .hero .cta-btn:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        main {
+            padding-top: 80px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        section {
+            margin-bottom: 50px;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            font-size: 40px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 26px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            background-color: #e6f0fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        h4 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            background-color: #e6f0fa;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        p, li {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px dashed #ccc;
+            transition: background-color 0.3s;
+        }
+
+        .menu-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item .item-content {
+            flex: 1;
+        }
+
+        .menu-item span {
+            font-size: 18px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .menu-item .price {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .menu-item .emoji {
+            margin-right: 10px;
+            font-size: 20px;
+            vertical-align: middle;
+        }
+
+        .menu-item .order-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+        }
+
+        .menu-item .order-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .note {
+            font-style: italic;
+            color: #777;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        .menu-section {
+            position: relative;
+            margin-top: 30px;
+        }
+
+        .menu-section h3 {
+            position: sticky;
+            top: 80px;
+            background-color: #e6f0fa;
+            padding: 15px 20px;
+            margin: 0;
+            font-size: 30px;
+            z-index: 900;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        #location iframe {
+            width: 100%;
+            height: 350px;
+            border: none;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        #contact p {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        #contact a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        #contact a:hover {
+            text-decoration: underline;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            font-size: 18px;
+            text-decoration: none;
+            display: none;
+            transition: background-color 0.3s;
+            width: 50px;
+            height: 50px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .back-to-top:hover {
+            background-color: #2980b9;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 10px 15px;
+            }
+
+            .logo img {
+                max-height: 40px;
+                width: auto;
+            }
+
+            nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: #2c3e50;
+                padding: 0;
+                margin: 0;
+            }
+
+            nav.active {
+                display: block;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 0;
+            }
+
+            nav ul li a {
+                padding: 15px 20px;
+                border-radius: 0;
+                background-color: transparent;
+                box-shadow: none;
+                font-size: 20px;
+            }
+
+            nav ul li.active a {
+                background-color: #3498db;
+                border-radius: 0;
+            }
+
+            nav ul li.active a::before {
+                margin-right: 10px;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            #menu-toggle:checked ~ nav {
+                display: block;
+            }
+
+            .hero {
+                height: 300px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero .cta-btn {
+                font-size: 18px;
+                padding: 10px 20px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 26px;
+            }
+
+            h3 {
+                font-size: 22px;
+            }
+
+            h4 {
+                font-size: 18px;
+            }
+
+            .menu-item span {
+                font-size: 16px;
+            }
+
+            main {
+                padding-top: 60px;
+            }
+
+            .menu-section h3 {
+                top: 60px;
+                font-size: 24px;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="https://via.placeholder.com/180x60?text=Cafe+on+the+Beach+Logo" alt="Cafe on the Beach Logo">
+            </div>
+            <input type="checkbox" id="menu-toggle">
+            <label for="menu-toggle" class="hamburger">☰</label>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#menu">Menu</a></li>
+                    <li><a href="#location">Location</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Fresh Coastal Dining!</h1>
+                <a href="#menu" class="cta-btn">View Menu</a>
+            </div>
+        </section>
+
+        <section id="home">
+            <h1>Welcome to Cafe on the Beach</h1>
+            <p>A beachfront eatery serving fresh seafood and coastal flavors in South Padre Island, TX.</p>
+        </section>
+
+        <section id="menu">
+            <h2>Our Menu</h2>
+            <p><strong>No More Than (3) Split Checks Per Table - Let Your Server Know at the Beginning of Your Meal.</strong></p>
+            <p><strong>18% Gratuity May Be Added for Parties of 5 or More.</strong></p>
+
+            <div class="menu-section">
+                <h3>Breakfast</h3>
+                <p>Served 8:00 AM to 11:00 AM Monday–Friday and until Noon on Weekends</p>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥚</span>Classic Benedict</span>
+                            <span>Canadian Bacon, Poached Eggs, Housemade Hollandaise on a Toasted English Muffin with Hash Browns</span>
+                            <span class="price">$14</span>
+                        </div>
+                        <a href="#order-classic-benedict" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🦀</span>Crab Cake Benedict</span>
+                            <span>Two 3oz. Crab Cakes on a Bed of Sautéed Spinach, Poached Eggs, Housemade Hollandaise on a Toasted English Muffin with Hash Browns</span>
+                            <span class="price">$27</span>
+                        </div>
+                        <a href="#order-crab-cake-benedict" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Florentine Benedict</span>
+                            <span>Sautéed Spinach, Poached Eggs, Housemade Hollandaise on a Toasted English Muffin with Hash Browns</span>
+                            <span class="price">$12</span>
+                        </div>
+                        <a href="#order-florentine-benedict" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍖</span>Hash Benedict</span>
+                            <span>Housemade Corned Beef Hash, Poached Eggs, Housemade Hollandaise with Toast</span>
+                            <span class="price">$19</span>
+                        </div>
+                        <a href="#order-hash-benedict" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🦞</span>Lobster Benedict</span>
+                            <span>Two 3oz. Cold Water Lobster Tails on a Bed of Sautéed Spinach, Poached Eggs, Housemade Hollandaise with Toast and Hash Browns</span>
+                            <span class="price">$31</span>
+                        </div>
+                        <a href="#order-lobster-benedict" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥚</span>Two Eggs</span>
+                            <span>Toast and Hashbrowns</span>
+                            <span class="price">$8</span>
+                            <span>Add Bacon, Sausage, Canadian Bacon $3 Each</span>
+                        </div>
+                        <a href="#order-two-eggs" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥞</span>Beachcomber Breakfast</span>
+                            <span>2 Eggs, 2 Pancakes, 2 Strips of Bacon, 1 Sausage Patty with Hash Browns</span>
+                            <span class="price">$15</span>
+                        </div>
+                        <a href="#order-beachcomber-breakfast" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍳</span>Cafe Omelette</span>
+                            <span>Choice of Cheddar-Jack, American, Swiss, or Provolone Cheese with Toast and Hash Browns</span>
+                            <span class="price">$9</span>
+                            <span>Add Chorizo, Bacon, Sausage, Canadian Bacon $1 Each; Add Chives, Pepper, Jalapeños, Tomato $0.5 Each; Add Spinach $0.5; Add Lobster $11</span>
+                        </div>
+                        <a href="#order-cafe-omelette" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌮</span>Giant Breakfast Taco</span>
+                            <span>Scrambled Eggs and Cheese Wrapped in a Fresh Flour Tortilla</span>
+                            <span class="price">$9</span>
+                            <span>Add Chorizo, Bacon, Sausage, Canadian Bacon, or Potatoes $1 Each</span>
+                        </div>
+                        <a href="#order-giant-breakfast-taco" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥞</span>Palms Malted Pancakes</span>
+                            <span>A Full Stack (3) of Malted Pancakes Dusted with Powdered Sugar, Served with 100% Pure Maple Syrup</span>
+                            <span class="price">$9</span>
+                            <span>Add Fresh Berries $2</span>
+                        </div>
+                        <a href="#order-palms-malted-pancakes" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🐟</span>Lox & Bagel</span>
+                            <span>Smoked Atlantic Salmon, Served with a Toasted Bagel, Cream Cheese, Capers, Red Onion, and Sliced Tomatoes</span>
+                            <span class="price">$17</span>
+                        </div>
+                        <a href="#order-lox-bagel" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥣</span>Steel Cut Oats</span>
+                            <span>Brown Sugar and Cinnamon</span>
+                            <span class="price">$7</span>
+                            <span>Add Blueberries, Strawberries, Pecans $1 Each</span>
+                        </div>
+                        <a href="#order-steel-cut-oats" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥚</span>Palms Light Breakfast</span>
+                            <span>1 Egg, 1 Pancake, 1 Sausage or Bacon with Hash Browns</span>
+                            <span class="price">$10</span>
+                        </div>
+                        <a href="#order-palms-light-breakfast" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Breakfast Extras</h3>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥯</span>Bagel & Cream Cheese</span>
+                            <span class="price">$5.5</span>
+                        </div>
+                        <a href="#order-bagel-cream-cheese" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍨</span>Yoghurt Parfait</span>
+                            <span>Seasonal Fresh Fruit and Vanilla Yogurt Topped with Cinnamon Granola</span>
+                            <span class="price">$8</span>
+                        </div>
+                        <a href="#order-yoghurt-parfait" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍎❤️</span>Fresh Fruit</span>
+                            <span>A Generous Portion of Seasonal Fresh Fruit</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-fresh-fruit" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍟</span>Shredded Hash Browns</span>
+                            <span class="price">$4.5</span>
+                        </div>
+                        <a href="#order-shredded-hash-browns" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥣</span>Cereal</span>
+                            <span>Raisin Granola or Frosted Flakes</span>
+                            <span class="price">$5</span>
+                        </div>
+                        <a href="#order-cereal" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🐟</span>Smoked Atlantic Salmon</span>
+                            <span class="price">$8</span>
+                        </div>
+                        <a href="#order-smoked-atlantic-salmon" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍞</span>Toast and Hashbrowns</span>
+                            <span class="price">$3.5</span>
+                            <span>Or Canadian Bacon, Sausage Patties (2)</span>
+                        </div>
+                        <a href="#order-toast-hashbrowns" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌮</span>Flour (2) or Corn (3) Tortillas</span>
+                            <span class="price">$2</span>
+                        </div>
+                        <a href="#order-flour-corn-tortillas-breakfast" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Lunch & Dinner</h3>
+                <p>Served Monday–Friday 11:00 AM to 10:00 PM, Weekends Noon to 10:00 PM</p>
+                <h4>Sharables</h4>
+                <p><strong>$2 Off from 2:00–6:00 PM Monday–Friday</strong></p>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍤</span>Jumbo Shrimp Cocktail</span>
+                            <span>Chilled Gulf Shrimp with Cocktail Sauce</span>
+                            <span class="price">$16</span>
+                        </div>
+                        <a href="#order-jumbo-shrimp-cocktail" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🦪</span>Crispy Oyster Tapas</span>
+                            <span>Six Housemade Potato Chips Topped with Crispy Oyster, Mango Pico, and Citrus Aioli</span>
+                            <span class="price">$16</span>
+                        </div>
+                        <a href="#order-crispy-oyster-tapas" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Parmesan Spinach Dip</span>
+                            <span>Served with Housemade Tortilla Chips</span>
+                            <span class="price">$8</span>
+                        </div>
+                        <a href="#order-parmesan-spinach-dip" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍤</span>Peel & Eat Shrimp</span>
+                            <span class="price">Half Pound $18 / One Pound $30</span>
+                        </div>
+                        <a href="#order-peel-eat-shrimp" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🦀</span>Crab Cakes</span>
+                            <span>Two 3oz. Crab Cakes loaded with Crab Meat and Topped with our Chipotle Beurre Blanc</span>
+                            <span class="price">$21</span>
+                        </div>
+                        <a href="#order-crab-cakes" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🧀</span>Cheese Quesadillas</span>
+                            <span>Fresh Made Flour Tortillas Grilled with Cheddar Cheese, Chicken $12, Shrimp $13</span>
+                            <span class="price">$9</span>
+                        </div>
+                        <a href="#order-cheese-quesadillas" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌶️</span>Jalapeño Hush Puppies</span>
+                            <span class="price">Small (6) $6 / Large (10) $9</span>
+                        </div>
+                        <a href="#order-jalapeno-hush-puppies" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌮</span>Chips & Salsa</span>
+                            <span class="price">$6</span>
+                        </div>
+                        <a href="#order-chips-salsa" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍟</span>Housemade Potato Chip Basket</span>
+                            <span class="price">$6</span>
+                        </div>
+                        <a href="#order-housemade-potato-chip-basket" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍲</span>Creamy Seafood Bisque</span>
+                            <span>Creamy Seafood Bisque with Salmon, Shrimp, and Red Snapper, Served with Croustini</span>
+                            <span class="price">Cup $9 / Bowl $16</span>
+                        </div>
+                        <a href="#order-creamy-seafood-bisque" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥣</span>Chicken Tortilla Soup</span>
+                            <span>Chicken, Tortilla Strips, Chilies, Tomatoes, Cilantro, and Avocado</span>
+                            <span class="price">Cup $6 / Bowl $9</span>
+                        </div>
+                        <a href="#order-chicken-tortilla-soup" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Soups & Salads</h3>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Palms Caesar</span>
+                            <span>Crisp Romaine Tossed with Caesar Dressing</span>
+                            <span class="price">$12</span>
+                        </div>
+                        <a href="#order-palms-caesar" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗❤️</span>Pure (Detox) Salad</span>
+                            <span>Spring Mix with Top Five Veggies: Broccoli, Zucchini, Carrots, Red Onion, Celery, Cucumber, Mushrooms, Tomatoes, Strawberries, Caramelized Pineapple</span>
+                            <span class="price">$16</span>
+                        </div>
+                        <a href="#order-pure-detox-salad" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Classic Wedge</span>
+                            <span>A Crispy Wedge of Iceberg Lettuce Topped with Bleu Cheese Dressing, Bleu Cheese Crumbles, and Bacon</span>
+                            <span class="price">$11</span>
+                        </div>
+                        <a href="#order-classic-wedge" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Beachfront Salad</span>
+                            <span>Fresh Spring Mix Lettuce with Tomato, Kalamata Olives, Pearls, Hearts of Palm, Bleu Cheese Crumbles, and Mandarin Oranges, with a Balsamic Vinaigrette Dressing and Caramelized Pecans</span>
+                            <span class="price">$18</span>
+                        </div>
+                        <a href="#order-beachfront-salad" class="order-btn">Order</a>
+                    </li>
+                </ul>
+                <h4>Salad Add-Ons</h4>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>Grilled/Blackened Chicken Breast</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-grilled-blackened-chicken-breast" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>Crispy Chicken Tenders</span>
+                            <span class="price">$6</span>
+                        </div>
+                        <a href="#order-crispy-chicken-tenders-salad" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>Grilled/Blackened Shrimp</span>
+                            <span class="price">$12</span>
+                        </div>
+                        <a href="#order-grilled-blackened-shrimp-salad" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>Grilled/Blackened Red Snapper</span>
+                            <span class="price">$14</span>
+                        </div>
+                        <a href="#order-grilled-blackened-red-snapper-salad" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>Grilled/Blackened Mahi Mahi</span>
+                            <span class="price">$12</span>
+                        </div>
+                        <a href="#order-grilled-blackened-mahi-mahi-salad" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>Grilled Sashimi Grade Ahi Tuna</span>
+                            <span class="price">$14</span>
+                        </div>
+                        <a href="#order-grilled-sashimi-grade-ahi-tuna" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>8 oz. Cold Water Center Cut Fillet Mignon</span>
+                            <span class="price">$29</span>
+                        </div>
+                        <a href="#order-8oz-cold-water-center-cut-fillet-mignon" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span>8 oz. Cold Water Lobster Tail</span>
+                            <span class="price">$32</span>
+                        </div>
+                        <a href="#order-8oz-cold-water-lobster-tail-salad" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Local Favorites</h3>
+                <p>Substitute Sweet Potato Waffle Fries or Crisp Housemade Potato Chips or Fresh Fruit for $2.5</p>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🐟❤️</span>Grilled Red Snapper Sandwich</span>
+                            <span>Served with Housemade Cilantro Lime Tartar Sauce</span>
+                            <span class="price">$20</span>
+                        </div>
+                        <a href="#order-grilled-red-snapper-sandwich" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥪</span>Classic Reuben Sandwich</span>
+                            <span>Slow Cooked Corned Beef on Toasted Marble Rye with Swiss Cheese, Sauerkraut, and Thousand Island Dressing</span>
+                            <span class="price">$18</span>
+                        </div>
+                        <a href="#order-classic-reuben-sandwich" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🐟</span>Make It a Snapper Reuben</span>
+                            <span class="price">$21</span>
+                        </div>
+                        <a href="#order-snapper-reuben" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍗</span>Teriyaki Chicken Sandwich</span>
+                            <span>Marinated Chicken Breast, Served on a Toasted Bun with Lettuce, Tomato, Onion, and Grilled Pineapple</span>
+                            <span class="price">$14</span>
+                        </div>
+                        <a href="#order-teriyaki-chicken-sandwich" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥓</span>Fried Egg BLT</span>
+                            <span>Fried Egg with Bacon, Lettuce, Tomato, Mayo, and Your Choice of Wheat or White Bread</span>
+                            <span class="price">$11</span>
+                            <span>Add Avocado $1</span>
+                        </div>
+                        <a href="#order-fried-egg-blt" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍔❤️</span>Impossible Burger</span>
+                            <span>Plant-Based Burger Served on a Wheat Bun with Lettuce, Tomato, Pickle Slices on the Side</span>
+                            <span class="price">$15</span>
+                        </div>
+                        <a href="#order-impossible-burger" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍗</span>Chicken Tenders</span>
+                            <span>Three Crispy Chicken Tenders Served with Honey Mustard</span>
+                            <span class="price">$10</span>
+                        </div>
+                        <a href="#order-chicken-tenders" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌭</span>Honey Mustard Palms Beach Dog</span>
+                            <span>1/4lb All Beef Kosher Style Hot Dog – Relish, Diced Tomatoes, and Chopped Red Onion Upon Request</span>
+                            <span class="price">$9</span>
+                            <span>Add $2 Wrapped in Bacon</span>
+                        </div>
+                        <a href="#order-honey-mustard-palms-beach-dog" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌭</span>Classic Corndogs</span>
+                            <span>Two Beef Corndogs Served with Honey Mustard</span>
+                            <span class="price">$9</span>
+                        </div>
+                        <a href="#order-classic-corndogs" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌮</span>Blackened Shrimp Tacos (2)</span>
+                            <span>Blackened Gulf Shrimp Topped with Cabbage and Tomatoes on a Corn Tortilla, Sliced with Chipotle Sauce and Served with a Cup of Tortilla Soup Instead of Chips or Fries</span>
+                            <span class="price">$12</span>
+                        </div>
+                        <a href="#order-blackened-shrimp-tacos" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌮</span>Blackened Mahi Mahi Tacos (2)</span>
+                            <span>Blackened Mahi Mahi Topped with Cabbage and Tomatoes on a Corn Tortilla, Sliced with Chipotle Sauce and Served with a Cup of Tortilla Soup Instead of Chips or Fries</span>
+                            <span class="price">$12</span>
+                        </div>
+                        <a href="#order-blackened-mahi-mahi-tacos" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Captain’s Corner</h3>
+                <p>Entrees Include a Petite Caesar Salad, Chef’s Vegetable, Baked Potato, Roll and Butter; Make It Your Own by Ordering A La Carte and Adding Your Favorite Side Dishes</p>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🦞</span>Cold Water Lobster Tail</span>
+                            <span>8 oz. Lobster Tail Broiled with Butter and White Wine, Served with Drawn Butter</span>
+                            <span class="price">Entree $49 / A La Carte $40</span>
+                        </div>
+                        <a href="#order-cold-water-lobster-tail" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🐟</span>Maple Glazed Salmon</span>
+                            <span class="price">Entree $30 / A La Carte $22</span>
+                        </div>
+                        <a href="#order-maple-glazed-salmon" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🐟</span>Blackened Mahi Mahi</span>
+                            <span class="price">Entree $28 / A La Carte $19</span>
+                        </div>
+                        <a href="#order-blackened-mahi-mahi" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍤</span>Grilled Skewered Shrimp</span>
+                            <span class="price">Entree $30 / A La Carte $21</span>
+                        </div>
+                        <a href="#order-grilled-skewered-shrimp" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍗</span>Chef Luis’ Chipotle Chicken</span>
+                            <span>Grilled Chicken Breast Topped with Sautéed Mushrooms and a Chipotle Butter Sauce</span>
+                            <span class="price">Entree $24 / A La Carte $15</span>
+                        </div>
+                        <a href="#order-chef-luis-chipotle-chicken" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥩</span>8 oz. Center Cut Fillet Mignon</span>
+                            <span class="price">Entree $44 / A La Carte $35</span>
+                            <span>Add Bleu Cheese $1, Add Sautéed Mushrooms $1, Add Sautéed Butter Sauce $14, Add 8 oz. Cold Water Lobster Tail to Any $32, Add Grilled Shrimp $9</span>
+                        </div>
+                        <a href="#order-8oz-center-cut-fillet-mignon" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Sides</h3>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍟</span>Sweet Potato Waffle Fries</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-sweet-potato-waffle-fries" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍟</span>French Fries</span>
+                            <span class="price">$4.5</span>
+                        </div>
+                        <a href="#order-french-fries" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥒</span>Grilled Zucchini (3 Slices)</span>
+                            <span class="price">$5</span>
+                        </div>
+                        <a href="#order-grilled-zucchini" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Creamed Spinach</span>
+                            <span class="price">$5</span>
+                        </div>
+                        <a href="#order-creamed-spinach" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥔</span>Baked Potato</span>
+                            <span>Choice of Butter, Sour Cream, Chives, and Cheese</span>
+                            <span class="price">$5</span>
+                        </div>
+                        <a href="#order-baked-potato" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Petite Caesar Salad</span>
+                            <span class="price">$6</span>
+                        </div>
+                        <a href="#order-petite-caesar-salad" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Petite Beachfront Salad</span>
+                            <span class="price">$10.5</span>
+                        </div>
+                        <a href="#order-petite-beachfront-salad" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥗</span>Cole Slaw</span>
+                            <span class="price">$3.5</span>
+                        </div>
+                        <a href="#order-cole-slaw" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Extras</h3>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🧀</span>Baked Parmesan Crisps (3)</span>
+                            <span class="price">$5</span>
+                        </div>
+                        <a href="#order-baked-parmesan-crisps" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥖</span>Warm Rolls (2)</span>
+                            <span class="price">$4</span>
+                        </div>
+                        <a href="#order-warm-rolls" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🌮</span>Flour (2) or Corn (3) Tortillas</span>
+                            <span class="price">$2</span>
+                        </div>
+                        <a href="#order-flour-corn-tortillas" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Desserts</h3>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍫</span>Molten Chocolate Lava Cake</span>
+                            <span class="price">$9</span>
+                        </div>
+                        <a href="#order-molten-chocolate-lava-cake" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥧</span>Key Lime Pie</span>
+                            <span class="price">$9</span>
+                        </div>
+                        <a href="#order-key-lime-pie" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍰</span>Cheesecake of the Day</span>
+                            <span class="price">$9</span>
+                        </div>
+                        <a href="#order-cheesecake-of-the-day" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍮</span>Tiramisu</span>
+                            <span class="price">$9</span>
+                        </div>
+                        <a href="#order-tiramisu" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Cook Your Catch</h3>
+                <p><span class="emoji">🐟</span> Bring your fresh catch, and we’ll prepare it for you! Reel in the day’s best catch from the Gulf waters, and let our chefs work their magic. We’ll season and grill your fish to perfection, served with your choice of sides. It’s a true sea-to-table experience that celebrates the bounty of South Padre Island!</p>
+            </div>
+
+            <div class="menu-section">
+                <h3>Sips</h3>
+                <h4>Juices & Milks</h4>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🧃</span>Orange Juice, Grapefruit, Pineapple, Milk</span>
+                            <span class="price">Regular $4.5 / Large $6.5</span>
+                        </div>
+                        <a href="#order-orange-juice-grapefruit-pineapple-milk" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🧃</span>Cranberry</span>
+                            <span class="price">$8</span>
+                        </div>
+                        <a href="#order-cranberry" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🧃</span>Chocolate Milk</span>
+                            <span class="price">$5.5</span>
+                        </div>
+                        <a href="#order-chocolate-milk" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🧃</span>Hot Chocolate</span>
+                            <span class="price">$6.25</span>
+                        </div>
+                        <a href="#order-hot-chocolate" class="order-btn">Order</a>
+                    </li>
+                </ul>
+                <h4>Coffee & Tea</h4>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Legendary South Pacific Blend Coffee, Organic, Fair-Trade (Free Refills)</span>
+                            <span class="price">$8.25</span>
+                        </div>
+                        <a href="#order-legendary-south-pacific-blend-coffee" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Assorted Hot Teas (Free Refills)</span>
+                            <span class="price">$8.25</span>
+                        </div>
+                        <a href="#order-assorted-hot-teas" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Iced Tea (Free Refills)</span>
+                            <span class="price">$8.25</span>
+                        </div>
+                        <a href="#order-iced-tea" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Arnold Palmer (Lemonade & Tea)</span>
+                            <span class="price">$8.25</span>
+                        </div>
+                        <a href="#order-arnold-palmer" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Boston Tea (Cranberry & Tea)</span>
+                            <span class="price">$8.25</span>
+                        </div>
+                        <a href="#order-boston-tea" class="order-btn">Order</a>
+                    </li>
+                </ul>
+                <h4>Soda & Water</h4>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥤</span>Bottled Topo Chico</span>
+                            <span class="price">$3.75</span>
+                        </div>
+                        <a href="#order-bottled-topo-chico" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥤</span>Bottled Spring Water</span>
+                            <span class="price">$2.75</span>
+                        </div>
+                        <a href="#order-bottled-spring-water" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥤</span>Fountain Drinks (Free Refills)</span>
+                            <span>Coke, Diet Coke, Sprite, Dr. Pepper & Lemonade</span>
+                            <span class="price">$2.75</span>
+                        </div>
+                        <a href="#order-fountain-drinks" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Fun Coffee & Liqueurs</h3>
+                <p>All Specialty Coffees made with South Pacific Legendary Blend Coffee</p>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Nutty Irishman</span>
+                            <span>Coffee, Frangelico Hazelnut Liqueur, and Bailey’s Irish Cream, topped with Whipped Cream</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-nutty-irishman" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Mexican Coffee</span>
+                            <span>Coffee, Tequila of your choice and Kahlua, topped with Whipped Cream</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-mexican-coffee" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Jamaican Coffee</span>
+                            <span>Coffee, Meyer’s Dark Rum, and Kahlua, topped with Whipped Cream</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-jamaican-coffee" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Cafe Amore</span>
+                            <span>Coffee, Courvoisier Cognac, DiSaronno Amaretto, Coffee, Kahlua, and Cream shaker over ice and topped with Whipped Cream</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-cafe-amore" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Palms Cafe Coffee</span>
+                            <span>Coffee, Gran Marnier, Frangelico, Bailey’s Irish Cream and Kahlua topped with Whipped Cream</span>
+                            <span class="price">$9</span>
+                        </div>
+                        <a href="#order-palms-cafe-coffee" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Frangelico Hazelnut</span>
+                            <span class="price">$7.75</span>
+                        </div>
+                        <a href="#order-frangelico-hazelnut" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Zacapa Rum</span>
+                            <span class="price">$9.5</span>
+                        </div>
+                        <a href="#order-zacapa-rum" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Bailey’s Irish Cream</span>
+                            <span class="price">$6.5</span>
+                        </div>
+                        <a href="#order-baileys-irish-cream" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>DiSaronno Amaretto</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-disaronno-amaretto" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Gran Marnier</span>
+                            <span class="price">$7.75</span>
+                        </div>
+                        <a href="#order-gran-marnier" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Jameson Irish Whiskey</span>
+                            <span class="price">$7.25</span>
+                        </div>
+                        <a href="#order-jameson-irish-whiskey" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">☕</span>Kahlua</span>
+                            <span class="price">$6.50</span>
+                        </div>
+                        <a href="#order-kahlua" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Mimosas & Marys</h3>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍹</span>By the Glass / Bottle</span>
+                            <span>Orange, Cranberry, Grapefruit or Pomegranate</span>
+                            <span class="price">$6 / $24</span>
+                        </div>
+                        <a href="#order-mimosas-by-the-glass-bottle" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍹</span>French 75</span>
+                            <span>Tequila Sunrise</span>
+                            <span class="price">$7</span>
+                        </div>
+                        <a href="#order-french-75" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🍹</span>Bloody Mary</span>
+                            <span>Bloody Treats</span>
+                            <span class="price">$8</span>
+                        </div>
+                        <a href="#order-bloody-mary" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="menu-section">
+                <h3>Boozy Treats</h3>
+                <ul>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥤</span>Frozen Grasshopper</span>
+                            <span class="price">$10</span>
+                        </div>
+                        <a href="#order-frozen-grasshopper" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥤</span>Mudslide</span>
+                            <span class="price">$10</span>
+                        </div>
+                        <a href="#order-mudslide" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥤</span>Berry Blast Smoothie</span>
+                            <span>Blackberries, Blueberries, Strawberries, Banana and Oat Milk</span>
+                            <span class="price">$8</span>
+                        </div>
+                        <a href="#order-berry-blast-smoothie" class="order-btn">Order</a>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-content">
+                            <span><span class="emoji">🥤</span>Tropical Treat Smoothie</span>
+                            <span>Mango, Pineapple, Banana and Oat Milk</span>
+                            <span class="price">$8</span>
+                            <span>Add Fresh Spinach $1</span>
+                        </div>
+                        <a href="#order-tropical-treat-smoothie" class="order-btn">Order</a>
+                    </li>
+                </ul>
+            </div>
+
+            <p class="note">*Consuming raw or undercooked meats, poultry, seafood, shellfish, or eggs may increase your risk of foodborne illness, especially if you have certain medical conditions.</p>
+        </section>
+
+        <section id="location">
+            <h2>Our Location</h2>
+            <p>3616 Gulf Blvd, South Padre Island, TX 78597</p>
+            <h3>Hours</h3>
+            <ul>
+                <li>Daily: 8:00 AM–10:00 PM</li>
+                <li>Breakfast: Monday–Friday 8:00 AM–11:00 AM, Weekends 8:00 AM–Noon</li>
+                <li>Lunch & Dinner: Monday–Friday 11:00 AM–10:00 PM, Weekends Noon–10:00 PM</li>
+            </ul>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3569.645161563224!2d-97.16657868462973!3d26.111843183498684!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x866f9f7d4b7f5b3f%3A0x5e7b5d5e5e5d5e5d!2s3616%20Gulf%20Blvd%2C%20South%20Padre%20Island%2C%20TX%2078597!5e0!3m2!1sen!2sus!4v1698781234567!5m2!1sen!2sus" allowfullscreen="" loading="lazy"></iframe>
+        </section>
+
+        <section id="contact">
+            <h2>Contact Us</h2>
+            <p>📞 Cafe Phone: <a href="tel:+19567611316">(956) 761-1316</a></p>
+            <p>📞 Resort Phone: <a href="tel:+19567612703">(956) 761-2703</a></p>
+            <p>📧 Email: <a href="mailto:info@cafeonthebeach.com">info@cafeonthebeach.com</a></p>
+            <p>🌐 Website: <a href="https://palmsresortcafe.com" target="_blank">palmsresortcafe.com</a></p>
+            <p>📷 Instagram: <a href="https://instagram.com/palmsresortcafe" target="_blank">@palmsresortcafe</a></p>
+        </section>
+    </main>
+
+    <a href="#" class="back-to-top">↑</a>
+
+    <footer>
+        <p>© 2025 Cafe on the Beach at The Palms Resort. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('nav ul li');
+        let isHovering = false;
+
+        window.addEventListener('scroll', () => {
+            if (!isHovering) {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(li => {
+                    li.classList.remove('active');
+                    if (li.querySelector('a').getAttribute('href').substring(1) === current) {
+                        li.classList.add('active');
+                    }
+                });
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                isHovering = true;
+                navLinks.forEach(li => li.classList.remove('active'));
+                link.classList.add('active');
+            });
+
+            link.addEventListener('mouseleave', () => {
+                isHovering = false;
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(li => {
+                    li.classList.remove('active');
+                    if (li.querySelector('a').getAttribute('href').substring(1) === current) {
+                        li.classList.add('active');
+                    }
+                });
+            });
+
+            link.addEventListener('click', () => {
+                const menuToggle = document.getElementById('menu-toggle');
+                menuToggle.checked = false;
+                document.querySelector('nav').classList.remove('active');
+            });
+        });
+
+        document.querySelector('.hamburger').addEventListener('click', () => {
+            document.querySelector('nav').classList.toggle('active');
+        });
+
+        const backToTop = document.querySelector('.back-to-top');
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+
+        let lastScrollTop = 0;
+        const header = document.querySelector('header');
+        const headerHeight = header.offsetHeight;
+        const stickyHeaders = document.querySelectorAll('.menu-section h3');
+
+        window.addEventListener('scroll', () => {
+            if (window.innerWidth <= 768) {
+                let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                if (scrollTop > lastScrollTop) {
+                    header.style.top = `-${headerHeight}px`;
+                    stickyHeaders.forEach(header => {
+                        header.style.top = '0px';
+                    });
+                } else {
+                    header.style.top = '0';
+                    stickyHeaders.forEach(header => {
+                        header.style.top = '60px';
+                    });
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            }
+        });
+    </script>
+</body>
+</html>
