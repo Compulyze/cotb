@@ -75,11 +75,24 @@
             padding: 15px 20px;
             max-width: 1200px;
             margin: 0 auto;
+            flex-wrap: nowrap;
         }
 
         .logo img {
+            max-height: 140px;
             width: auto;
-            max-height: 40px;
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-title h1 {
+            color: white;
+            font-size: 24px;
+            margin: 0;
+            white-space: nowrap;
         }
 
         nav ul {
@@ -372,14 +385,16 @@
 
         @media (max-width: 768px) {
             .header-container {
-                flex-direction: row;
-                justify-content: space-between;
                 padding: 10px 15px;
             }
 
             .logo img {
-                max-height: 40px;
+                max-height: 60px;
                 width: auto;
+            }
+
+            .header-title h1 {
+                font-size: 18px;
             }
 
             nav {
@@ -478,6 +493,9 @@
         <div class="header-container">
             <div class="logo">
                 <img src="cotb_logo.png" alt="Cafe on the Beach Logo">
+            </div>
+            <div class="header-title">
+                <h1>Cafe on the Beach</h1>
             </div>
             <input type="checkbox" id="menu-toggle">
             <label for="menu-toggle" class="hamburger">☰</label>
@@ -1007,11 +1025,7 @@
                     <li class="menu-item">
                         <div class="item-content">
                             <span><span class="emoji">🍤</span>Grilled Skewered Shrimp</span>
-                            <span class="price">Entree $30 / A La Carte $21</span>
-                        </div>
-                        <a href="#order-grilled-skewered-shrimp" class="order-btn">Order</a>
-                    </li>
-                    <li class="menu-item">
+                            <span class="price">Entree $30 / A La Carte```html
                         <div class="item-content">
                             <span><span class="emoji">🍗</span>Chef Luis’ Chipotle Chicken</span>
                             <span>Grilled Chicken Breast Topped with Sautéed Mushrooms and a Chipotle Butter Sauce</span>
@@ -1445,7 +1459,7 @@
         </section>
     </main>
 
-    <a href="#" class="back-to-top">↑</a>
+    <a href="#top" class="back-to-top">↑</a>
 
     <footer>
         <p>© 2025 Cafe on the Beach at The Palms Resort. All rights reserved.</p>
@@ -1520,6 +1534,11 @@
             } else {
                 backToTop.style.display = 'none';
             }
+        });
+
+        backToTop.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         let lastScrollTop = 0;
