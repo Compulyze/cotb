@@ -75,11 +75,33 @@
             padding: 15px 20px;
             max-width: 1200px;
             margin: 0 auto;
+            flex-wrap: nowrap; /* Ensure items stay on one line */
         }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-title h1 {
+            color: white;
+            font-size: 24px; /* Default size for desktop */
+            margin: 0;
+            white-space: nowrap; /* Keep text on one line */
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 10px 15px;
+        }
+
+            .header-title h1 {
+                font-size: 18px; /* Smaller size for mobile */
+            }
 
         .logo img {
             width: auto;
-            max-height: 40px;
+            max-height: 60px;
         }
 
         nav ul {
@@ -475,21 +497,24 @@
 </head>
 <body>
     <header>
-        <div class="header-container">
-            <div class="logo">
-                <img src="cotb_logo.png" alt="Cafe on the Beach Logo">
-            </div>
-            <input type="checkbox" id="menu-toggle">
-            <label for="menu-toggle" class="hamburger">☰</label>
-            <nav>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#menu">Menu</a></li>
-                    <li><a href="#location">Location</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
+       <div class="header-container">
+    <div class="logo">
+        <img src="https://via.placeholder.com/180x60?text=Cafe+on+the+Beach+Logo" alt="Cafe on the Beach Logo">
+    </div>
+    <div class="header-title">
+        <h1>Cafe on the Beach</h1>
+    </div>
+    <input type="checkbox" id="menu-toggle">
+    <label for="menu-toggle" class="hamburger">☰</label>
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#menu">Menu</a></li>
+            <li><a href="#location">Location</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+</div>
     </header>
 
     <main>
